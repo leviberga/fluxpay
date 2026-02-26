@@ -1,0 +1,9 @@
+CREATE TABLE users (
+user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+name VARCHAR(100) NOT NULL,
+document VARCHAR(14) NOT NULL UNIQUE,
+email VARCHAR(100) NOT NULL UNIQUE,
+password VARCHAR(255) NOT NULL,
+balance DECIMAL(19, 2) DEFAULT 0.00,
+user_type VARCHAR(20) NOT NULL
+)
