@@ -118,3 +118,25 @@ As entidades JPA nunca são expostas diretamente na API. O uso de DTOs garante c
 
 **`BigDecimal` para valores monetários**
 Tipos como `Double` e `Float` têm problemas de arredondamento em ponto flutuante. `BigDecimal` garante precisão total para operações financeiras.
+
+
+## Comandos e Queries Relevantes Para Teste
+
+**Rodar o Postgres pelo terminal**
+```bash
+docker exec -it postgres_local psql -U user_dev -d mydatabase
+```
+
+**Inserir usuários de teste (exemplo)**
+ ```bash
+INSERT INTO users (user_id, name, document, email, password, balance, user_type) 
+VALUES (gen_random_uuid(), 'João Silva', '12345678901', 'joao@email.com', '123456', 1000.00, 'COMMON');
+
+INSERT INTO users (user_id, name, document, email, password, balance, user_type) 
+VALUES (gen_random_uuid(), 'Loja ABC', '12345678000195', 'loja@email.com', '123456', 0.00, 'MERCHANT');
+```
+
+**Consulta para confirmar a inserção**
+```bash
+SELECT user_id, name, user_type, balance FROM users;
+```
