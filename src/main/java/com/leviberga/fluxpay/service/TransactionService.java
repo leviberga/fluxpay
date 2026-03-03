@@ -1,6 +1,10 @@
 package com.leviberga.fluxpay.service;
 
 import com.leviberga.fluxpay.enums.UserType;
+import com.leviberga.fluxpay.exception.InsufficientBalanceException;
+import com.leviberga.fluxpay.exception.ReceiverNotFoundException;
+import com.leviberga.fluxpay.exception.UnauthorizedTransactionException;
+import com.leviberga.fluxpay.exception.UserNotFoundException;
 import com.leviberga.fluxpay.model.Transaction;
 import com.leviberga.fluxpay.model.User;
 import com.leviberga.fluxpay.repository.TransactionRepository;
@@ -28,15 +32,15 @@ public class TransactionService {
     @Transactional
     public void transferMoney(UUID senderID, UUID receiverID, BigDecimal amount) {
         User sender = userRepository.findById(senderID)
-                .orElseThrow(() -> new RuntimeException("Sender not found"));
+                .orElseThrow(() -> new UserNotFoundException("Sender not found with the following ID: " + senderID));
         if (sender.getUserType() == UserType.MERCHANT){
-            throw new RuntimeException("The sender user type cannot be MERCHANT");
+            throw new UnauthorizedTransactionException("The sender user type cannot be MERCHANT");
         }
         if (sender.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient balance");
+            throw new InsufficientBalanceException("Insufficient balance, the sender has " + sender.getBalance() + " and it needed atleast " + amount);
         }
         User receiver = userRepository.findById(receiverID)
-                .orElseThrow(() -> new RuntimeException("Receiver not found"));
+                .orElseThrow(() -> new ReceiverNotFoundException("Receiver not found with the following ID: " + receiverID));
 
         BigDecimal newSenderBalance = sender.getBalance().subtract(amount);
         sender.setBalance(newSenderBalance);
