@@ -119,6 +119,8 @@ As entidades JPA nunca são expostas diretamente na API. O uso de DTOs garante c
 **`BigDecimal` para valores monetários**
 Tipos como `Double` e `Float` têm problemas de arredondamento em ponto flutuante. `BigDecimal` garante precisão total para operações financeiras.
 
+**Desabilitando o `DefaultResponseErrorHandler` no `RestTemplate`**
+Por padrão, o `RestTemplate` do Spring lança uma exceção para qualquer resposta HTTP com status 4xx ou 5xx, antes mesmo de você conseguir ler o body da resposta. O serviço externo de autorização retorna 403 quando uma transação é negada — um comportamento esperado, não um erro real. Para tratar esse cenário corretamente, o `errorHandler` foi desabilitado globalmente no `AppConfig`, permitindo que o `AuthorizationService` leia o body e decida como reagir. O trade-off dessa abordagem é que outras chamadas HTTP feitas pelo mesmo `RestTemplate` também não vão lançar exceção em caso de erro, exigindo verificação manual do status em cada integração.
 
 ## Comandos e Queries Relevantes Para Teste
 
@@ -128,7 +130,7 @@ docker exec -it postgres_local psql -U user_dev -d mydatabase
 ```
 
 **Inserir usuários de teste (exemplo)**
- ```bash
+```sql
 INSERT INTO users (user_id, name, document, email, password, balance, user_type) 
 VALUES (gen_random_uuid(), 'João Silva', '12345678901', 'joao@email.com', '123456', 1000.00, 'COMMON');
 
@@ -137,6 +139,6 @@ VALUES (gen_random_uuid(), 'Loja ABC', '12345678000195', 'loja@email.com', '1234
 ```
 
 **Consulta para confirmar a inserção**
-```bash
+```sql
 SELECT user_id, name, user_type, balance FROM users;
 ```

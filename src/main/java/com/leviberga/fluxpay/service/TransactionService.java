@@ -22,11 +22,13 @@ public class TransactionService {
 
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
+    private final AuthorizationService authorizationService;
 
     @Autowired
-    public TransactionService(UserRepository userRepository, TransactionRepository transactionRepository) {
+    public TransactionService(UserRepository userRepository, TransactionRepository transactionRepository, AuthorizationService authorizationService) {
         this.userRepository = userRepository;
         this.transactionRepository = transactionRepository;
+        this.authorizationService = authorizationService;
     }
 
     @Transactional
@@ -41,6 +43,8 @@ public class TransactionService {
         }
         User receiver = userRepository.findById(receiverID)
                 .orElseThrow(() -> new ReceiverNotFoundException("Receiver not found with the following ID: " + receiverID));
+
+        authorizationService.authorize();
 
         BigDecimal newSenderBalance = sender.getBalance().subtract(amount);
         sender.setBalance(newSenderBalance);
