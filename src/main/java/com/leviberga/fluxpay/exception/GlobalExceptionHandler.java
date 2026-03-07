@@ -14,11 +14,6 @@ public class GlobalExceptionHandler {
         ApiError error = new ApiError(HttpStatus.NOT_FOUND, ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
-    @ExceptionHandler(ReceiverNotFoundException.class)
-    public ResponseEntity<ApiError> handleReceiverNotFound(ReceiverNotFoundException ex){
-        ApiError error = new ApiError(HttpStatus.NOT_FOUND, ex.getMessage());
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
-    }
     @ExceptionHandler(InsufficientBalanceException.class)
     public ResponseEntity<ApiError> handleInsufficientBalance(InsufficientBalanceException ex){
         ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());

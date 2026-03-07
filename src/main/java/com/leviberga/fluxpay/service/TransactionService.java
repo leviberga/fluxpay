@@ -1,8 +1,9 @@
 package com.leviberga.fluxpay.service;
 
+import com.leviberga.fluxpay.dto.TransactionResponseDTO;
+import com.leviberga.fluxpay.dto.UserSummaryDTO;
 import com.leviberga.fluxpay.enums.UserType;
 import com.leviberga.fluxpay.exception.InsufficientBalanceException;
-import com.leviberga.fluxpay.exception.ReceiverNotFoundException;
 import com.leviberga.fluxpay.exception.UnauthorizedTransactionException;
 import com.leviberga.fluxpay.exception.UserNotFoundException;
 import com.leviberga.fluxpay.model.Transaction;
@@ -10,11 +11,10 @@ import com.leviberga.fluxpay.model.User;
 import com.leviberga.fluxpay.repository.TransactionRepository;
 import com.leviberga.fluxpay.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Optional;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -24,7 +24,6 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final AuthorizationService authorizationService;
 
-    @Autowired
     public TransactionService(UserRepository userRepository, TransactionRepository transactionRepository, AuthorizationService authorizationService) {
         this.userRepository = userRepository;
         this.transactionRepository = transactionRepository;
@@ -32,7 +31,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public void transferMoney(UUID senderID, UUID receiverID, BigDecimal amount) {
+    public TransactionResponseDTO transferMoney(UUID senderID, UUID receiverID, BigDecimal amount) {
         User sender = userRepository.findById(senderID)
                 .orElseThrow(() -> new UserNotFoundException("Sender not found with the following ID: " + senderID));
         if (sender.getUserType() == UserType.MERCHANT){
@@ -42,7 +41,7 @@ public class TransactionService {
             throw new InsufficientBalanceException("Insufficient balance, the sender has " + sender.getBalance() + " and it needed atleast " + amount);
         }
         User receiver = userRepository.findById(receiverID)
-                .orElseThrow(() -> new ReceiverNotFoundException("Receiver not found with the following ID: " + receiverID));
+                .orElseThrow(() -> new UserNotFoundException("Receiver not found with the following ID: " + receiverID));
 
         authorizationService.authorize();
 
@@ -60,5 +59,27 @@ public class TransactionService {
         transaction.setReceiver(receiver);
 
         transactionRepository.save(transaction);
+
+        TransactionResponseDTO response = new TransactionResponseDTO();
+        response.setTransactionID(transaction.getId());
+        response.setAmount(transaction.getAmount());
+        response.setCreatedAt(LocalDateTime.now());
+
+        UserSummaryDTO senderDTO = new UserSummaryDTO();
+
+        senderDTO.setId(sender.getId());
+        senderDTO.setName(sender.getName());
+        senderDTO.setUserType(sender.getUserType());
+
+        UserSummaryDTO receiverDTO = new UserSummaryDTO();
+
+        receiverDTO.setId(receiver.getId());
+        receiverDTO.setName(receiver.getName());
+        receiverDTO.setUserType(receiver.getUserType());
+
+        response.setSender(senderDTO);
+        response.setReceiver(receiverDTO);
+
+        return response;
     }
 }

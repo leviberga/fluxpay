@@ -1,11 +1,12 @@
 package com.leviberga.fluxpay.controller;
 
 import com.leviberga.fluxpay.dto.TransactionRequestDTO;
+import com.leviberga.fluxpay.dto.TransactionResponseDTO;
 import com.leviberga.fluxpay.model.Transaction;
-import com.leviberga.fluxpay.repository.TransactionRepository;
-import com.leviberga.fluxpay.repository.UserRepository;
 import com.leviberga.fluxpay.service.TransactionService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,14 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class TransactionController {
 
     private final TransactionService transactionService;
-    @Autowired
+
     public TransactionController(TransactionService transactionService) {
         this.transactionService = transactionService;
     }
 
     @PostMapping
-    private String newTransaction(@RequestBody TransactionRequestDTO newTransaction) {
-        transactionService.transferMoney(newTransaction.getSenderId(), newTransaction.getReceiverId(), newTransaction.getAmount());
-        return "Transfer successful";
+    public ResponseEntity<TransactionResponseDTO> newTransaction(@Valid @RequestBody TransactionRequestDTO newTransaction) {
+        TransactionResponseDTO transaction = transactionService.transferMoney(newTransaction.getSenderId(), newTransaction.getReceiverId(), newTransaction.getAmount());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
     }
 }
