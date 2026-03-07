@@ -17,6 +17,7 @@ O projeto foi desenvolvido com foco em boas práticas de desenvolvimento backend
 - Flyway Migration
 - Lombok
 - Docker & Docker Compose
+- JUnit 5 + Mockito
 
 ## ⚙️ Como rodar localmente
 
@@ -50,6 +51,36 @@ A API estará disponível em `http://localhost:8080`.
 
 ## 📦 Endpoints
 
+### Usuários
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| POST | `/users` | Cadastra um novo usuário |
+
+**Body da requisição:**
+
+```json
+{
+  "name": "João Silva",
+  "document": "12345678901",
+  "email": "joao@email.com",
+  "password": "senha123",
+  "userType": "COMMON"
+}
+```
+
+**Response (`201 Created`):**
+
+```json
+{
+  "id": "uuid-gerado",
+  "name": "João Silva",
+  "email": "joao@email.com",
+  "userType": "COMMON",
+  "balance": 0
+}
+```
+
 ### Transferências
 
 | Método | Endpoint | Descrição |
@@ -66,12 +97,25 @@ A API estará disponível em `http://localhost:8080`.
 }
 ```
 
-### Usuários
+**Response (`201 Created`):**
 
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| POST | `/users` | Cadastra um novo usuário |
-| GET | `/users/{id}` | Busca um usuário pelo ID |
+```json
+{
+  "transactionID": "uuid-da-transacao",
+  "amount": 100.00,
+  "sender": {
+    "id": "uuid-do-remetente",
+    "name": "João Silva",
+    "userType": "COMMON"
+  },
+  "receiver": {
+    "id": "uuid-do-destinatario",
+    "name": "Loja ABC",
+    "userType": "MERCHANT"
+  },
+  "createdAt": "2026-03-06T21:14:40"
+}
+```
 
 ## 🗄️ Banco de dados
 
@@ -102,6 +146,22 @@ transactions
 - Em caso de falha, a transação é revertida por completo (`@Transactional`)
 - Uma notificação é disparada ao recebedor após a transferência
 
+## 🧪 Testes
+
+O projeto conta com testes unitários cobrindo todos os cenários de negócio do `TransactionService`:
+
+- Transferência realizada com sucesso
+- Sender não encontrado
+- Sender do tipo MERCHANT tentando enviar
+- Saldo insuficiente
+- Autorização negada pelo serviço externo
+
+Para rodar os testes:
+
+```bash
+./mvnw test
+```
+
 ## 🏗️ Decisões técnicas
 
 **`@Transactional` no serviço de transferência**
@@ -113,14 +173,17 @@ Os objetos `User` vinculados a uma `Transaction` são carregados do banco apenas
 **Flyway para migrations**
 O versionamento do banco é feito via Flyway, garantindo que qualquer desenvolvedor que clonar o projeto tenha exatamente o mesmo schema, sem depender do `ddl-auto: update` do Hibernate.
 
-**DTOs para entrada de dados**
-As entidades JPA nunca são expostas diretamente na API. O uso de DTOs garante controle sobre o que entra e sai, além de desacoplar o contrato da API do modelo de banco de dados.
+**DTOs para entrada e saída de dados**
+As entidades JPA nunca são expostas diretamente na API. O uso de DTOs garante controle sobre o que entra e sai, protegendo dados sensíveis como senha e saldo, além de desacoplar o contrato da API do modelo de banco de dados.
 
 **`BigDecimal` para valores monetários**
 Tipos como `Double` e `Float` têm problemas de arredondamento em ponto flutuante. `BigDecimal` garante precisão total para operações financeiras.
 
 **Desabilitando o `DefaultResponseErrorHandler` no `RestTemplate`**
 Por padrão, o `RestTemplate` do Spring lança uma exceção para qualquer resposta HTTP com status 4xx ou 5xx, antes mesmo de você conseguir ler o body da resposta. O serviço externo de autorização retorna 403 quando uma transação é negada — um comportamento esperado, não um erro real. Para tratar esse cenário corretamente, o `errorHandler` foi desabilitado globalmente no `AppConfig`, permitindo que o `AuthorizationService` leia o body e decida como reagir. O trade-off dessa abordagem é que outras chamadas HTTP feitas pelo mesmo `RestTemplate` também não vão lançar exceção em caso de erro, exigindo verificação manual do status em cada integração.
+
+**Validação de entrada com `@Valid` e `jakarta.validation`**
+Os campos dos DTOs de request são validados automaticamente pelo Spring antes de chegarem nos controllers, usando anotações como `@NotBlank`, `@NotNull` e `@Positive`. Isso evita que dados inválidos cheguem à camada de serviço.
 
 ## Comandos e Queries Relevantes Para Teste
 
