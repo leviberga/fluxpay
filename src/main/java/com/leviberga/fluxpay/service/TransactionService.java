@@ -38,7 +38,7 @@ public class TransactionService {
             throw new UnauthorizedTransactionException("The sender user type cannot be MERCHANT");
         }
         if (sender.getBalance().compareTo(amount) < 0) {
-            throw new InsufficientBalanceException("Insufficient balance, the sender has " + sender.getBalance() + " and it needed atleast " + amount);
+            throw new InsufficientBalanceException("Insufficient balance");
         }
         User receiver = userRepository.findById(receiverID)
                 .orElseThrow(() -> new UserNotFoundException("Receiver not found with the following ID: " + receiverID));

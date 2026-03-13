@@ -1,11 +1,7 @@
 package com.leviberga.fluxpay.controller;
 
-import com.leviberga.fluxpay.dto.TransactionRequestDTO;
-import com.leviberga.fluxpay.dto.TransactionResponseDTO;
 import com.leviberga.fluxpay.dto.UserRequestDTO;
 import com.leviberga.fluxpay.dto.UserResponseDTO;
-import com.leviberga.fluxpay.model.User;
-import com.leviberga.fluxpay.service.TransactionService;
 import com.leviberga.fluxpay.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
