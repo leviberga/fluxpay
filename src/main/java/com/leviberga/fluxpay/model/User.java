@@ -1,8 +1,8 @@
 package com.leviberga.fluxpay.model;
 
+import com.leviberga.fluxpay.dto.UserRequestDTO;
 import com.leviberga.fluxpay.enums.UserType;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -28,4 +28,13 @@ public class User {
     private BigDecimal balance;
     @Enumerated(EnumType.STRING)
     private UserType userType;
+
+    public User(UserRequestDTO dto) {
+        this.name = dto.getName();
+        this.document = dto.getDocument();
+        this.email = dto.getEmail();
+        this.password = dto.getPassword();
+        this.userType = dto.getUserType();
+        this.balance = java.math.BigDecimal.ZERO;
+    }
 }

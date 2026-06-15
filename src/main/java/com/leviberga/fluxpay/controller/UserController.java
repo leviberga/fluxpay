@@ -6,10 +6,9 @@ import com.leviberga.fluxpay.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
@@ -24,5 +23,12 @@ public class UserController {
         UserResponseDTO user = userService.createUser(newUser);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
+    }
+    @GetMapping("/{Id}")
+    public ResponseEntity<UserResponseDTO> getUser(@PathVariable UUID Id){
+        UserResponseDTO user = userService.getUserById(Id);
+
+        return ResponseEntity.status(HttpStatus.OK).body(user);
+
     }
 }
