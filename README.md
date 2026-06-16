@@ -35,13 +35,21 @@ git clone https://github.com/seu-usuario/fluxpay.git
 cd fluxpay
 ```
 
-2. Suba o banco de dados com Docker
+2. Configure as variáveis de ambiente
+
+```bash
+cp .env.example .env
+```
+
+Edite o `.env` com suas credenciais locais.
+
+3. Suba o banco de dados com Docker
 
 ```bash
 docker compose up -d
 ```
 
-3. Execute a aplicação
+4. Execute a aplicação
 
 ```bash
 ./mvnw spring-boot:run
@@ -56,8 +64,9 @@ A API estará disponível em `http://localhost:8080`.
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
 | POST | `/users` | Cadastra um novo usuário |
+| GET | `/users/{id}` | Busca um usuário pelo ID |
 
-**Body da requisição:**
+**POST /users — Body da requisição:**
 
 ```json
 {
@@ -69,7 +78,7 @@ A API estará disponível em `http://localhost:8080`.
 }
 ```
 
-**Response (`201 Created`):**
+**POST /users — Response (`201 Created`):**
 
 ```json
 {
@@ -81,13 +90,25 @@ A API estará disponível em `http://localhost:8080`.
 }
 ```
 
+**GET /users/{id} — Response (`200 OK`):**
+
+```json
+{
+  "id": "uuid-do-usuario",
+  "name": "João Silva",
+  "email": "joao@email.com",
+  "userType": "COMMON",
+  "balance": 900.00
+}
+```
+
 ### Transferências
 
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
 | POST | `/transactions` | Realiza uma transferência entre usuários |
 
-**Body da requisição:**
+**POST /transactions — Body da requisição:**
 
 ```json
 {
@@ -97,7 +118,7 @@ A API estará disponível em `http://localhost:8080`.
 }
 ```
 
-**Response (`201 Created`):**
+**POST /transactions — Response (`201 Created`):**
 
 ```json
 {
@@ -170,7 +191,6 @@ Para rodar os testes:
 ### Estrutura em camadas
 ![Arquitetura em camadas](docs/architecture-layers.png)
 
-
 ## 🏗️ Decisões técnicas
 
 **`@Transactional` no serviço de transferência**
@@ -193,6 +213,9 @@ Por padrão, o `RestTemplate` do Spring lança uma exceção para qualquer respo
 
 **Validação de entrada com `@Valid` e `jakarta.validation`**
 Os campos dos DTOs de request são validados automaticamente pelo Spring antes de chegarem nos controllers, usando anotações como `@NotBlank`, `@NotNull` e `@Positive`. Isso evita que dados inválidos cheguem à camada de serviço.
+
+**Variáveis de ambiente com `.env`**
+As credenciais do banco de dados são carregadas via variáveis de ambiente, nunca hardcoded no código. O arquivo `.env.example` documenta as variáveis necessárias sem expor valores reais.
 
 ## Comandos e Queries Relevantes Para Teste
 
