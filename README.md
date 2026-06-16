@@ -162,6 +162,15 @@ Para rodar os testes:
 ./mvnw test
 ```
 
+## 🏛️ Arquitetura
+
+### Fluxo de uma transferência
+![Fluxo de transferência](docs/transfer-flow.png)
+
+### Estrutura em camadas
+![Arquitetura em camadas](docs/architecture-layers.png)
+
+
 ## 🏗️ Decisões técnicas
 
 **`@Transactional` no serviço de transferência**
