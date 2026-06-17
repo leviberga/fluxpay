@@ -34,4 +34,9 @@ public class Transaction {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    public Transaction(User sender, User receiver, BigDecimal amount) {
+        this.sender = sender;
+        this.receiver = receiver;
+        this.amount = amount;
+    }
 }
