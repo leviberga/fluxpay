@@ -6,6 +6,9 @@ import com.leviberga.fluxpay.exception.UserNotFoundException;
 import com.leviberga.fluxpay.model.User;
 import com.leviberga.fluxpay.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -30,4 +33,15 @@ public class UserService {
 
         return new UserResponseDTO(user);
     }
+    @Transactional
+    public UserResponseDTO addBalance(UUID id, BigDecimal amount) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        user.setBalance(user.getBalance().add(amount));
+        User updatedUser = userRepository.save(user);
+
+        return new UserResponseDTO(updatedUser);
+    }
+
 }

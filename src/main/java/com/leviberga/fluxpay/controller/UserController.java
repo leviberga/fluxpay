@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @RestController
@@ -31,4 +32,10 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(user);
 
     }
+    @PutMapping("/{id}/deposit")
+    public ResponseEntity<UserResponseDTO> deposit(@PathVariable UUID id, @RequestBody BigDecimal amount) {
+        UserResponseDTO user = userService.addBalance(id, amount);
+        return ResponseEntity.ok(user);
+    }
+
 }
