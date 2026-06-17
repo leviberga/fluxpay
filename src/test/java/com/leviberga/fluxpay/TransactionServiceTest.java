@@ -5,6 +5,7 @@ import com.leviberga.fluxpay.enums.UserType;
 import com.leviberga.fluxpay.exception.InsufficientBalanceException;
 import com.leviberga.fluxpay.exception.UnauthorizedTransactionException;
 import com.leviberga.fluxpay.exception.UserNotFoundException;
+import com.leviberga.fluxpay.model.Transaction;
 import com.leviberga.fluxpay.model.User;
 import com.leviberga.fluxpay.repository.TransactionRepository;
 import com.leviberga.fluxpay.repository.UserRepository;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,13 +57,16 @@ class TransactionServiceTest {
 
         when(userRepository.findById(mockSender.getId())).thenReturn(Optional.of(mockSender));
         when(userRepository.findById(mockReceiver.getId())).thenReturn(Optional.of(mockReceiver));
-
         when(authorizationService.authorize()).thenReturn(true);
+
+        when(transactionRepository.save(any(Transaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
         TransactionResponseDTO result = transactionService.transferMoney(mockSender.getId(), mockReceiver.getId(), amount);
 
         assertNotNull(result);
-
     }
+
     @Test
     void senderNotFound(){
         User mockSender = new User();
@@ -82,6 +87,7 @@ class TransactionServiceTest {
             transactionService.transferMoney(mockSender.getId(), mockReceiver.getId(), amount);
         });
     }
+
     @Test
     void senderIsMerchant(){
         User mockSender = new User();
@@ -102,6 +108,7 @@ class TransactionServiceTest {
             transactionService.transferMoney(mockSender.getId(), mockReceiver.getId(), amount);
         });
     }
+
     @Test
     void insufficientBalance(){
         User mockSender = new User();
@@ -122,6 +129,7 @@ class TransactionServiceTest {
             transactionService.transferMoney(mockSender.getId(), mockReceiver.getId(), amount);
         });
     }
+
     @Test
     void unauthorizedTransaction(){
         User mockSender = new User();
@@ -144,6 +152,5 @@ class TransactionServiceTest {
         assertThrows(UnauthorizedTransactionException.class, () -> {
             transactionService.transferMoney(mockSender.getId(), mockReceiver.getId(), amount);
         });
-
     }
 }

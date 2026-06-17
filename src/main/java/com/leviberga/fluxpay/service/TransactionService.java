@@ -1,85 +1,45 @@
 package com.leviberga.fluxpay.service;
 
 import com.leviberga.fluxpay.dto.TransactionResponseDTO;
-import com.leviberga.fluxpay.dto.UserSummaryDTO;
 import com.leviberga.fluxpay.enums.UserType;
-import com.leviberga.fluxpay.exception.InsufficientBalanceException;
-import com.leviberga.fluxpay.exception.UnauthorizedTransactionException;
-import com.leviberga.fluxpay.exception.UserNotFoundException;
-import com.leviberga.fluxpay.model.Transaction;
-import com.leviberga.fluxpay.model.User;
-import com.leviberga.fluxpay.repository.TransactionRepository;
-import com.leviberga.fluxpay.repository.UserRepository;
+import com.leviberga.fluxpay.exception.*;
+import com.leviberga.fluxpay.model.*;
+import com.leviberga.fluxpay.repository.*;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class TransactionService {
 
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
     private final AuthorizationService authorizationService;
 
-    public TransactionService(UserRepository userRepository, TransactionRepository transactionRepository, AuthorizationService authorizationService) {
-        this.userRepository = userRepository;
-        this.transactionRepository = transactionRepository;
-        this.authorizationService = authorizationService;
-    }
-
     @Transactional
-    public TransactionResponseDTO transferMoney(UUID senderID, UUID receiverID, BigDecimal amount) {
-        User sender = userRepository.findById(senderID)
-                .orElseThrow(() -> new UserNotFoundException("Sender not found with the following ID: " + senderID));
-        if (sender.getUserType() == UserType.MERCHANT){
+    public TransactionResponseDTO transferMoney(UUID senderId, UUID receiverId, BigDecimal amount) {
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new UserNotFoundException("Sender not found with ID: " + senderId));
+        if (sender.getUserType() == UserType.MERCHANT) {
             throw new UnauthorizedTransactionException("The sender user type cannot be MERCHANT");
         }
         if (sender.getBalance().compareTo(amount) < 0) {
             throw new InsufficientBalanceException("Insufficient balance");
         }
-        User receiver = userRepository.findById(receiverID)
-                .orElseThrow(() -> new UserNotFoundException("Receiver not found with the following ID: " + receiverID));
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new UserNotFoundException("Receiver not found with ID: " + receiverId));
 
         authorizationService.authorize();
 
-        BigDecimal newSenderBalance = sender.getBalance().subtract(amount);
-        sender.setBalance(newSenderBalance);
-        BigDecimal newReceiverBalance = receiver.getBalance().add(amount);
-        receiver.setBalance(newReceiverBalance);
+        sender.setBalance(sender.getBalance().subtract(amount));
+        receiver.setBalance(receiver.getBalance().add(amount));
 
-        userRepository.save(sender);
-        userRepository.save(receiver);
+        Transaction transaction = transactionRepository.save(new Transaction(sender, receiver, amount));
 
-        Transaction transaction = new Transaction();
-        transaction.setAmount(amount);
-        transaction.setSender(sender);
-        transaction.setReceiver(receiver);
-
-        transactionRepository.save(transaction);
-
-        TransactionResponseDTO response = new TransactionResponseDTO();
-        response.setTransactionID(transaction.getId());
-        response.setAmount(transaction.getAmount());
-        response.setCreatedAt(LocalDateTime.now());
-
-        UserSummaryDTO senderDTO = new UserSummaryDTO();
-
-        senderDTO.setId(sender.getId());
-        senderDTO.setName(sender.getName());
-        senderDTO.setUserType(sender.getUserType());
-
-        UserSummaryDTO receiverDTO = new UserSummaryDTO();
-
-        receiverDTO.setId(receiver.getId());
-        receiverDTO.setName(receiver.getName());
-        receiverDTO.setUserType(receiver.getUserType());
-
-        response.setSender(senderDTO);
-        response.setReceiver(receiverDTO);
-
-        return response;
+        return new TransactionResponseDTO(transaction);
     }
 }
